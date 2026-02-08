@@ -1,4 +1,4 @@
--- ddmtd_ts_pd_single_file.vhd
+-- tt_um_arthfink_ddmtd_single_file.vhd
 --
 -- Core: timestamp-based phase detector (DDMTD-style front-end)
 -- - Asynchronous clk_ref and clk_fb are synchronized into clk_sys
@@ -32,7 +32,7 @@ entity tt_um_arthfink_ddmtd is
   );
 end entity;
 
-architecture rtl of ddmtd_ts_pd is
+architecture rtl of tt_um_arthfink_ddmtd is
 
   -- Synchronizer shift registers
   subtype t_sync is std_logic_vector(G_SYNC_STAGES-1 downto 0);
@@ -172,10 +172,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tb_ddmtd_ts_pd is
+entity tb_tt_um_arthfink_ddmtd is
 end entity;
 
-architecture tb of tb_ddmtd_ts_pd is
+architecture tb of tb_tt_um_arthfink_ddmtd is
   constant C_COUNTER_BITS : positive := 16;
   constant C_ERR_BITS     : positive := 12;
 
@@ -197,7 +197,7 @@ architecture tb of tb_ddmtd_ts_pd is
 
 begin
 
-  dut : entity work.ddmtd_ts_pd
+  dut : entity work.tt_um_arthfink_ddmtd
     generic map (
       G_COUNTER_BITS => C_COUNTER_BITS,
       G_ERR_BITS     => C_ERR_BITS,
