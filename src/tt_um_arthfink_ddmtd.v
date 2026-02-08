@@ -17,11 +17,7 @@ module tt_um_arthfink_ddmtd (
     wire sel_close   = ui_in[2]; // 1 = close loop using internal helper
 
     wire        phase_valid;
-    wire signed [17:0] phase_err;
-    wire        dbg_edge_ref;
-    wire        dbg_edge_fb;
     wire signed [23:0] ctrl;
-
 
     // Helper clock from NCO
     wire        clk_helper;
@@ -104,7 +100,7 @@ module tt_um_arthfink_ddmtd (
 
     // Show ctrl LSBs on outputs for debugging
     // Single output assignment: show CTRL (LSBs) + flags
-    assign uo_out  = ena ? { ctrl[4:0], dbg_edge_fb, dbg_edge_ref, phase_valid } : 8'h00;
+    assign uo_out = ena ? { ctrl[3:0], sel_close, fb_samp, ref_samp, phase_valid } : 8'h00;
     assign uio_out = 8'h00;
     assign uio_oe  = 8'h00;
 
