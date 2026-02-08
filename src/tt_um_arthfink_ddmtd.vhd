@@ -10,7 +10,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity ddmtd_ts_pd is
+entity tt_um_arthfink_ddmtd is
   generic (
     G_COUNTER_BITS  : positive := 24;  -- free-running timestamp counter width
     G_ERR_BITS      : positive := 18;  -- output bits for signed phase error (truncated/saturated)
