@@ -34,7 +34,6 @@ module tt_um_arthfink_ddmtd (
     // The core will be a Verilog module generated from ddmtd_core.vhd
     wire ref_samp, fb_samp;
     wire signed [15:0] phase_err_beat;   // choose width
-    wire phase_valid;
 
     ddmtd_sampler #(
       .SYNC_STAGES(2),
