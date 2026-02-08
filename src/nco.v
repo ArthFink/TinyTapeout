@@ -13,7 +13,7 @@
 module nco #(
     parameter integer ACC_W    = 24,   // phase accumulator width
     parameter integer CTRL_W   = 24,   // ctrl width
-    parameter [ACC_W-1:0] BASE_INC = 1<<16, // nominal increment (tune this)
+    parameter [ACC_W-1:0] BASE_INC = (ACC_W'(1) << 16), // nominal increment (tune this)
     parameter integer CTRL_SH  = 8     // ctrl scaling: smaller => stronger control
 )(
     input  wire                    clk,
