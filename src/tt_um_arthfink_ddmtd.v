@@ -9,10 +9,12 @@ module tt_um_arthfink_ddmtd (
     output wire [7:0] uio_oe
 );
 
-    // Map TT pins to your core's "clock-like" inputs.
-    // You must drive these from outside (e.g. testbench / board).
-    wire clk_ref = ui_in[0];
-    wire clk_fb  = ui_in[1];
+    // External reference (clock-like) input
+    wire clk_ref_ext = ui_in[0];
+
+    // External fb (optional) and selector
+    wire clk_fb_ext  = ui_in[1];
+    wire sel_close   = ui_in[2]; // 1 = close loop using internal helper
 
     wire        phase_valid;
     wire signed [17:0] phase_err;
@@ -20,16 +22,34 @@ module tt_um_arthfink_ddmtd (
     wire        dbg_edge_fb;
     wire signed [23:0] ctrl;
 
+
+    // Helper clock from NCO
+    wire        clk_helper;
+    wire [23:0] nco_phase_acc;
+
+    // Choose feedback clock source
+    wire clk_fb = sel_close ? clk_helper : clk_fb_ext;
+    wire clk_ref = clk_ref_ext;
+
     // The core will be a Verilog module generated from ddmtd_core.vhd
-    ddmtd_core u_core (
-        .clk_sys      (clk),
-        .rst_n        (rst_n),
-        .clk_ref      (clk_ref),
-        .clk_fb       (clk_fb),
-        .phase_valid  (phase_valid),
-        .phase_err    (phase_err),
-        .dbg_edge_ref (dbg_edge_ref),
-        .dbg_edge_fb  (dbg_edge_fb)
+    wire ref_samp, fb_samp;
+    wire signed [15:0] phase_err_beat;   // choose width
+    wire phase_valid;
+
+    ddmtd_sampler #(
+      .SYNC_STAGES(2),
+      .COUNT_W(16)
+    ) u_core (
+      .clk_sys        (clk),
+      .rst_n          (rst_n),
+      .ena            (ena),
+      .clk_ref_in     (clk_ref),
+      .clk_fb_in      (clk_fb),
+      .helper_tick    (helper_tick),
+      .phase_valid    (phase_valid),
+      .phase_err_beat (phase_err_beat),
+      .ref_samp       (ref_samp),
+      .fb_samp        (fb_samp)
     );
 
     loop_filter #(
@@ -45,6 +65,43 @@ module tt_um_arthfink_ddmtd (
         .phase_err(phase_err),
         .ctrl(ctrl)
     );
+
+    // NCO: ctrl -> clk_helper
+    nco #(
+        .ACC_W(24),
+        .CTRL_W(24),
+        .BASE_INC(1<<16),
+        .CTRL_SH(8)
+    ) u_nco (
+        .clk       (clk),
+        .rst_n     (rst_n),
+        .ena       (ena),
+        .ctrl      (ctrl),
+        .clk_out   (clk_helper),
+        .phase_acc (nco_phase_acc)
+    );
+
+    reg helper_msb_d;
+    always @(posedge clk or negedge rst_n) begin
+      if (!rst_n) helper_msb_d <= 1'b0;
+      else        helper_msb_d <= nco_phase_acc[23];
+    end
+
+    wire helper_tick = (nco_phase_acc[23] ^ helper_msb_d); // tick on toggle
+
+    // Debug outputs:
+    // uo[0]=phase_valid
+    // uo[1]=edge_ref, uo[2]=edge_fb
+    // uo[3]=sel_close
+    // uo[7:4]=some ctrl bits (LSBs)
+    wire [7:0] uo_dbg = {
+        ctrl[3:0],
+        sel_close,
+        dbg_edge_fb,
+        dbg_edge_ref,
+        phase_valid
+    };
+
 
     // Show ctrl LSBs on outputs for debugging
     // Single output assignment: show CTRL (LSBs) + flags
