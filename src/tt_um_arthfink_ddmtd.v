@@ -18,6 +18,7 @@ module tt_um_arthfink_ddmtd (
     wire signed [17:0] phase_err;
     wire        dbg_edge_ref;
     wire        dbg_edge_fb;
+    wire signed [23:0] ctrl;
 
     // The core will be a Verilog module generated from ddmtd_core.vhd
     ddmtd_core u_core (
@@ -31,20 +32,25 @@ module tt_um_arthfink_ddmtd (
         .dbg_edge_fb  (dbg_edge_fb)
     );
 
-    // Output mapping (debug-friendly)
-    // [0]=valid, [1]=edge_ref, [2]=edge_fb, [7:3]=phase_err LSBs
-    wire [7:0] uo_raw = {
-        phase_err[4:0],
-        dbg_edge_fb,
-        dbg_edge_ref,
-        phase_valid
-    };
+    loop_filter #(
+        .ERR_W(18),
+        .CTRL_W(24),
+        .KP_SH(4),
+        .KI_SH(10)
+    ) u_lf (
+        .clk(clk),
+        .rst_n(rst_n),
+        .ena(ena),
+        .phase_valid(phase_valid),
+        .phase_err(phase_err),
+        .ctrl(ctrl)
+    );
 
-    assign uo_out  = ena ? uo_raw : 8'h00;
+    // Show ctrl LSBs on outputs for debugging
+    // Single output assignment: show CTRL (LSBs) + flags
+    assign uo_out  = ena ? { ctrl[4:0], dbg_edge_fb, dbg_edge_ref, phase_valid } : 8'h00;
     assign uio_out = 8'h00;
     assign uio_oe  = 8'h00;
 
-    // Optional: silence unused warnings
     wire _unused = &{uio_in};
-
 endmodule
