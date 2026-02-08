@@ -48,7 +48,7 @@ module tt_um_arthfink_ddmtd (
     );
 
     loop_filter #(
-        .ERR_W(18),
+        .ERR_W(16),
         .CTRL_W(24),
         .KP_SH(4),
         .KI_SH(10)
@@ -57,9 +57,10 @@ module tt_um_arthfink_ddmtd (
         .rst_n(rst_n),
         .ena(ena),
         .phase_valid(phase_valid),
-        .phase_err(phase_err),
+        .phase_err(phase_err_beat),
         .ctrl(ctrl)
     );
+
 
     // NCO: ctrl -> clk_helper
     nco #(
@@ -84,25 +85,18 @@ module tt_um_arthfink_ddmtd (
 
     wire helper_tick = (nco_phase_acc[23] ^ helper_msb_d); // tick on toggle
 
-    // Debug outputs:
-    // uo[0]=phase_valid
-    // uo[1]=edge_ref, uo[2]=edge_fb
-    // uo[3]=sel_close
-    // uo[7:4]=some ctrl bits (LSBs)
-    wire [7:0] uo_dbg = {
-        ctrl[3:0],
-        sel_close,
-        dbg_edge_fb,
-        dbg_edge_ref,
-        phase_valid
-    };
+     // Debug outputs:
+    // uo[0] = phase_valid
+    // uo[1] = ref_samp
+    // uo[2] = fb_samp
+    // uo[3] = sel_close
+    // uo[7:4] = ctrl[3:0] (LSBs)
+    wire [7:0] uo_dbg = { ctrl[3:0], sel_close, fb_samp, ref_samp, phase_valid };
 
-
-    // Show ctrl LSBs on outputs for debugging
-    // Single output assignment: show CTRL (LSBs) + flags
-    assign uo_out = ena ? { ctrl[3:0], sel_close, fb_samp, ref_samp, phase_valid } : 8'h00;
+    assign uo_out  = ena ? uo_dbg : 8'h00;
     assign uio_out = 8'h00;
     assign uio_oe  = 8'h00;
 
     wire _unused = &{uio_in};
+
 endmodule
