@@ -16,6 +16,9 @@ module tt_um_arthfink_ddmtd (
     wire clk_fb_ext  = ui_in[1];
     wire sel_close   = ui_in[2]; // 1 = close loop using internal helper
 
+    wire [1:0] kp_sel = ui_in[4:3]; // P gain select (00=weakest, 11=strongest)
+    wire [1:0] ki_sel = ui_in[6:5]; // I gain select (00=weakest, 11=strongest)
+
     wire        phase_valid;
     wire signed [23:0] ctrl;
 
@@ -49,15 +52,15 @@ module tt_um_arthfink_ddmtd (
 
     loop_filter #(
         .ERR_W(16),
-        .CTRL_W(24),
-        .KP_SH(4),
-        .KI_SH(10)
+        .CTRL_W(24)
     ) u_lf (
         .clk(clk),
         .rst_n(rst_n),
         .ena(ena),
         .phase_valid(phase_valid),
         .phase_err(phase_err_beat),
+        .kp_sel(kp_sel),
+        .ki_sel(ki_sel),
         .ctrl(ctrl)
     );
 
@@ -85,18 +88,16 @@ module tt_um_arthfink_ddmtd (
 
     wire helper_tick = (nco_phase_acc[23] ^ helper_msb_d); // tick on toggle
 
-     // Debug outputs:
-    // uo[0] = phase_valid
-    // uo[1] = ref_samp
-    // uo[2] = fb_samp
-    // uo[3] = sel_close
-    // uo[7:4] = ctrl[3:0] (LSBs)
-    wire [7:0] uo_dbg = { ctrl[3:0], sel_close, fb_samp, ref_samp, phase_valid };
+    // Outputs (beat-domain phase error):
+    // uo[0]   = phase_valid (new measurement strobe)
+    // uo[1]   = phase_err_sign = phase_err_beat[15]
+    // uo[7:2] = phase_err_beat[11:6] (6 bits, mid-bits for stability)
+    wire [7:0] uo_dbg = { phase_err_beat[11:6], phase_err_beat[15], phase_valid };
 
     assign uo_out  = ena ? uo_dbg : 8'h00;
     assign uio_out = 8'h00;
     assign uio_oe  = 8'h00;
 
-    wire _unused = &{uio_in};
+    wire _unused = &{uio_in, ui_in[7:3]};
 
 endmodule
