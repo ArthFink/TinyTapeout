@@ -98,6 +98,6 @@ module tt_um_arthfink_ddmtd (
     assign uio_out = 8'h00;
     assign uio_oe  = 8'h00;
 
-    wire _unused = &{uio_in, ui_in[7:3]};
+    wire _unused = &{uio_in, nco_phase_acc[22:0], ref_samp, fb_samp};
 
 endmodule

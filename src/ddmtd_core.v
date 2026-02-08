@@ -91,7 +91,7 @@ module ddmtd_sampler #(
                 // when both timestamps captured, output signed difference
                 if (have_ref && have_fb) begin
                     // signed modular difference (wrap OK if COUNT_W is large enough)
-                    phase_err_beat <= $signed({1'b0,t_fb}) - $signed({1'b0,t_ref});
+                    phase_err_beat <= $signed(t_fb) - $signed(t_ref);
                     phase_valid    <= 1'b1;
                     have_ref <= 1'b0;
                     have_fb  <= 1'b0;

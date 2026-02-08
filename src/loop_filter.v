@@ -70,10 +70,12 @@ module loop_filter #(
         reg signed [ACC_W-1:0] maxv;
         reg signed [ACC_W-1:0] minv;
     begin
+        /* verilator lint_off BLKSEQ */
         // max = 0 followed by all 1s in CTRL_W bits (sign-extended to ACC_W)
         maxv = {{(ACC_W-CTRL_W){1'b0}}, 1'b0, {(CTRL_W-1){1'b1}}};
         // min = 1 followed by all 0s in CTRL_W bits (sign-extended to ACC_W)
         minv = {{(ACC_W-CTRL_W){1'b1}}, 1'b1, {(CTRL_W-1){1'b0}}};
+        /* verilator lint_on BLKSEQ */
 
         if (x > maxv)       sat_to_ctrl = maxv[CTRL_W-1:0];
         else if (x < minv)  sat_to_ctrl = minv[CTRL_W-1:0];
